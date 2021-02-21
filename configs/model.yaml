@@ -1,2 +1,5 @@
 # This config contains all hyper-parameters of the NN:
 # LR, adam_b ...
+
+
+relu_negative_slope: 0.2
