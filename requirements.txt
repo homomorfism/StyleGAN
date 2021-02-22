@@ -1,9 +1,8 @@
 # I will add specific versions of packets to use later
 # Coz I don't really know which packets we will use
-
-torch~=1.7.1
 pytorch-lightning
 torchvision
 pyyaml
 argparse
 torchsummary
+torch
