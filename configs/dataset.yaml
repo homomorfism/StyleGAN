@@ -1,0 +1,48 @@
+# This config contains all info only about dataset with styles
+# Types of augmentations, location of dataset folder, input sizes, etc...
+
+# Tho folders in data folder:
+# - content
+# - style
+
+## Content datasets
+
+# Faces: labeled face in wild, ~13000 images
+labeled_face_wild_archive: "data/lfw.zip"
+labeled_face_wild_path: "data/content/lwf"
+labeled_face_wild_size: "all"
+
+# Faces: CelebA, 16000 images
+celeba_archive: "data/img_align_celeba.zip"
+celeba_path: "data/content/celeba"
+celeba_size: 16000
+
+# Birds: Caltech-UCSD birds dataset, 6033 images
+caltech_archive: "data/images.tgz"
+caltech_path: "data/content/caltech"
+caltech_size: "all"
+
+# Buildings: Oxford building dataset, ~5000 images
+oxford_archive: "data/oxbuild_images.tgz"
+oxford_path: "data/content/oxford"
+oxford_size: "all"
+
+# Cars: standford dataset, ~16000 images
+# https://ai.stanford.edu/~jkrause/cars/car_dataset.html
+# To be added
+
+
+
+## Style
+
+# Textures dataset: DTD, 5640 images
+# https://www.robots.ox.ac.uk/~vgg/data/dtd/
+describable_textures_archive: "data/dtd-r1.0.1.tar.gz"
+describable_textures_path: "data/style/dtd"
+describable_textures_size: -1
+
+
+# Behance dataset
+# https://bam-dataset.org/
+# To be added
+
