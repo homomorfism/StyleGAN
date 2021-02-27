@@ -1,8 +1,9 @@
-import pytorch_lightning as pl
-import torch
 import torch.nn as nn
-from torchsummary import summary
 from torchvision import models
+import numpy as np
+import torch
+import pytorch_lightning as pl
+from torchsummary import summary
 
 
 class Encoder(pl.LightningModule):
@@ -10,7 +11,7 @@ class Encoder(pl.LightningModule):
     def __init__(self):
         super(Encoder, self).__init__()
         model = models.vgg16(pretrained=True)
-
+		
         features = list(model.features.children())[:31:]
         self.block1 = nn.Sequential(*features[:5:])
         self.pooling1 = nn.Sequential(nn.MaxPool2d(kernel_size=(2, 2), stride=(8, 8), dilation=(1, 1), ceil_mode=False))
@@ -22,6 +23,7 @@ class Encoder(pl.LightningModule):
         self.pooling3 = nn.Sequential(nn.MaxPool2d(kernel_size=(2, 2), stride=(2, 2), dilation=(1, 1), ceil_mode=False))
 
         self.block4 = nn.Sequential(*features[17:24:])
+
 
     def forward(self, x):
         print('Initial: ', x.shape)
@@ -48,7 +50,7 @@ class Encoder(pl.LightningModule):
         # print('Output: ', output.shape)
         return output
 
-
+	
 def encoder_summary(model, input_size):
     print(summary(model, input_size))
 
@@ -57,9 +59,9 @@ def encoder_testing():
     tensor = torch.randn([64, 3, 256, 256])
     encoder = Encoder()
     encoder(tensor.float())
-
+	
 
 if __name__ == '__main__':
-    # encoder = Encoder()
-    # encoder_summary(encoder, (3, 256, 256))
+    #encoder = Encoder()
+    #encoder_summary(encoder, (3, 256, 256))
     encoder_testing()
