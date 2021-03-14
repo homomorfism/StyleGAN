@@ -94,26 +94,26 @@ class GramMatrix(pl.LightningModule):
         return gram.div(batch_size * channels * height * width)
 
 
-class AdversarialLoss(pl.LightningModule):
+class GAdversarialLoss(pl.LightningModule):
     """
     $L_A = E[log Prob(Real|D(x̂))]$
     """
 
     def __init__(self):
-        super(AdversarialLoss, self).__init__()
+        super(GAdversarialLoss, self).__init__()
         pass
 
     def forward(self, discriminator_real_prob: torch.Tensor):
         return torch.log(discriminator_real_prob).mean()
 
 
-class ClassificationLoss(pl.LightningModule):
+class GClassificationLoss(pl.LightningModule):
     """
     L_{DS} = E [log Prob(s|D(x̂))]
     """
 
     def __init__(self):
-        super(ClassificationLoss, self).__init__()
+        super(GClassificationLoss, self).__init__()
 
     def forward(self, discriminator_real_prob, discriminator_real_classes, labels):
         """
@@ -129,26 +129,51 @@ class ClassificationLoss(pl.LightningModule):
         return torch.log(discriminator_real_classes[labels]).mean()
 
 
-class ContentLoss(pl.LightningModule):
+class GContentLoss(pl.LightningModule):
     def __init__(self):
-        super(ContentLoss, self).__init__()
+        super(GContentLoss, self).__init__()
 
     def forward(self, generated_image_content, generated_image_style):
         return (generated_image_content[3] - generated_image_style[3]).abs().mean()
 
 
-class StyleLoss(pl.LightningModule):
+class GStyleLoss(pl.LightningModule):
     """
     L_s = E[ ∑ \abs(Gram(y(l)) − Gram(x̂(l))) ].
     """
 
     def __init__(self):
-        super(StyleLoss, self).__init__()
+        super(GStyleLoss, self).__init__()
         self.gram = GramMatrix()
 
     def forward(self, generated_image, generated_style):
-        loss = torch.tensor([
-                                self.gram(generated_style[i]) - self.gram(generated_image[i])
-                            ] for i in range(4))
+        loss = self.gram(generated_style) - self.gram(generated_image)
 
         return loss.abs().mean()
+
+
+class DAdversarialLoss(pl.LightningModule):
+    """
+     L̂_A = E[log Prob(Fake|D(x̂)) + log Prob(Real|D(y))],
+    """
+
+    def __init__(self):
+        super(DAdversarialLoss, self).__init__()
+
+    def forward(self, discriminator_real_prob, discriminator_style_prob):
+        """
+
+        @param discriminator_real_prob: probabilities of real image, passed to discr.
+        @param discriminator_style_prob: probabilities of style image, passed to discr.
+
+        @return: adv. loss
+        """
+        loss = (1 - discriminator_real_prob).log() + discriminator_style_prob.log()
+
+        return loss.mean()
+
+
+class DClassificationLoss(pl.LightningModule):
+    """
+    L̂DS = E[log Prob(s|D(x̂)) + log Prob(s|D(y))]
+    """

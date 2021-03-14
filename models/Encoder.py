@@ -1,4 +1,5 @@
 import pytorch_lightning as pl
+import torch
 import torch.nn as nn
 from torchvision import models
 
@@ -16,13 +17,19 @@ class Encoder(pl.LightningModule):
 
         features = list(model.features.children())[:31:]
         self.block1 = nn.Sequential(*features[:5:])
-        self.pooling1 = nn.MaxPool2d(kernel_size=(2, 2), stride=(8, 8), dilation=(1, 1), ceil_mode=False)
+        self.pooling1 = nn.MaxPool2d(
+            kernel_size=(2, 2), stride=(8, 8), dilation=(1, 1), ceil_mode=False, return_indices=True
+        )
 
         self.block2 = nn.Sequential(*features[5:10:])
-        self.pooling2 = nn.MaxPool2d(kernel_size=(2, 2), stride=(4, 4), dilation=(1, 1), ceil_mode=False)
+        self.pooling2 = nn.MaxPool2d(
+            kernel_size=(2, 2), stride=(4, 4), dilation=(1, 1), ceil_mode=False, return_indices=True
+        )
 
         self.block3 = nn.Sequential(*features[10:17:])
-        self.pooling3 = nn.MaxPool2d(kernel_size=(2, 2), stride=(2, 2), dilation=(1, 1), ceil_mode=False)
+        self.pooling3 = nn.MaxPool2d(
+            kernel_size=(2, 2), stride=(2, 2), dilation=(1, 1), ceil_mode=False, return_indices=True
+        )
 
         self.block4 = nn.Sequential(*features[17:24:])
 
@@ -42,7 +49,7 @@ class Encoder(pl.LightningModule):
 
         x = self.block4(x)
 
-        output = [to_concat1, to_concat2, to_concat3, x]
+        output = torch.cat((to_concat1, to_concat2, to_concat3, x), dim=2)
         if self.verbose:
             self.verbose = False
 
