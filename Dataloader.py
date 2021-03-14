@@ -59,6 +59,7 @@ class MergeDatasets(Dataset):
         self.second_dataset_cut = random_split(second_dataset, [min_length, len(second_dataset) - min_length])
 
         assert len(self.first_dataset_cut) == len(self.second_dataset_cut), "Защита от дурачка, ы"
+        print(f"Length of dataset: {min_length}")
 
     def __getitem__(self, index):
         image1 = self.first_dataset_cut[index]
