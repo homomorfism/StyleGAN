@@ -52,3 +52,6 @@ batch_size: 4
 val_percentage: 0.1
 num_workers: 16
 
+# Number of style classes
+n_style_classes:
+

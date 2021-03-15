@@ -133,8 +133,8 @@ class GContentLoss(pl.LightningModule):
     def __init__(self):
         super(GContentLoss, self).__init__()
 
-    def forward(self, generated_image_content, generated_image_style):
-        return (generated_image_content[3] - generated_image_style[3]).abs().mean()
+    def forward(self, encoded_image_content, encoded_generated_image_content):
+        return (encoded_image_content[3] - encoded_generated_image_content[3]).abs().mean()
 
 
 class GStyleLoss(pl.LightningModule):
@@ -146,8 +146,8 @@ class GStyleLoss(pl.LightningModule):
         super(GStyleLoss, self).__init__()
         self.gram = GramMatrix()
 
-    def forward(self, generated_image, generated_style):
-        loss = self.gram(generated_style) - self.gram(generated_image)
+    def forward(self, encoded_stylized_image, encoded_style_image):
+        loss = self.gram(encoded_stylized_image) - self.gram(encoded_style_image)
 
         return loss.abs().mean()
 
@@ -163,8 +163,8 @@ class DAdversarialLoss(pl.LightningModule):
     def forward(self, discriminator_real_prob, discriminator_style_prob):
         """
 
-        @param discriminator_real_prob: probabilities of real image, passed to discr.
-        @param discriminator_style_prob: probabilities of style image, passed to discr.
+        @param discriminator_real_prob: probabilities of real image, passed to discriminator
+        @param discriminator_style_prob: probabilities of style image, passed to discriminator
 
         @return: adv. loss
         """
@@ -181,15 +181,15 @@ class DClassificationLoss(pl.LightningModule):
     def __init__(self):
         super(DClassificationLoss, self).__init__()
 
-    def forward(self, discriminator_real_styles, discriminator_style_styles, labels):
+    def forward(self, discriminator_real_classes, discriminator_style_classes, labels):
         """
 
-        @param discriminator_real_styles: style class predictions by real image
-        @param discriminator_style_styles: style class predictions by style images
+        @param discriminator_real_classes: style class predictions by real image
+        @param discriminator_style_classes: style class predictions by style images
         @param labels: label of style images
         @return: DS loss
         """
-        loss = torch.log(discriminator_real_styles[labels]) + \
-               torch.log(discriminator_style_styles[labels])
+        loss = torch.log(discriminator_real_classes[labels]) + \
+               torch.log(discriminator_style_classes[labels])
 
         return loss.mean()

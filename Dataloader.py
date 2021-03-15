@@ -109,6 +109,8 @@ class CustomDataLoader(pl.LightningDataModule, ABC):
     def prepare_data(self):
         """
         Checking if data is unarchived or archives with images exists and need to be unarchived.
+
+        @return
         """
 
         names = [self.content_train_names, self.style_train_names]

@@ -6,7 +6,7 @@ from models.utils import DecoderBlock
 
 class Decoder(pl.LightningModule):
 
-    def __init__(self, in_channels, middle_channels, out_channels, pooling_indices, verbose):
+    def __init__(self, in_channels, middle_channels, out_channels, pooling_indices, verbose=False):
         super(Decoder, self).__init__()
         self.pooling_indices = pooling_indices
         self.verbose = verbose
@@ -75,7 +75,7 @@ class Decoder(pl.LightningModule):
         x = self.block4(x)
         if self.verbose:
             print('Shape after block4: ', x.shape)
-            self.verbose = True
+            self.verbose = False
 
         x = self.unpool4(x, self.pooling_indices[3])
 
