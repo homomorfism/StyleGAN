@@ -177,3 +177,19 @@ class DClassificationLoss(pl.LightningModule):
     """
     L̂DS = E[log Prob(s|D(x̂)) + log Prob(s|D(y))]
     """
+
+    def __init__(self):
+        super(DClassificationLoss, self).__init__()
+
+    def forward(self, discriminator_real_styles, discriminator_style_styles, labels):
+        """
+
+        @param discriminator_real_styles: style class predictions by real image
+        @param discriminator_style_styles: style class predictions by style images
+        @param labels: label of style images
+        @return: DS loss
+        """
+        loss = torch.log(discriminator_real_styles[labels]) + \
+               torch.log(discriminator_style_styles[labels])
+
+        return loss.mean()

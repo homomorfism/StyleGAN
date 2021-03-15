@@ -12,7 +12,6 @@ class Generator(pl.LightningModule):
         super(Generator, self).__init__()
 
         self.encoder = Encoder()
-        self.encoder_output = Encoder()
 
         # Output shape from encoder: [-1, 512, 16, 16]
         self.decoder = Decoder(
@@ -43,6 +42,6 @@ class Generator(pl.LightningModule):
         combined_image = mask_normalized * encoded_content_image + (1 - mask_normalized) * ada_in_normalized
 
         decoded_image = self.decoder(combined_image)
-        encoded_combined_image = self.encoder_output(decoded_image)
+        encoded_combined_image = self.encoder(decoded_image)
 
         return encoded_content_image, encoded_style_image, decoded_image, encoded_combined_image
