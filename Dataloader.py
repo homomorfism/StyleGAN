@@ -20,26 +20,31 @@ class CustomDataset(Dataset):
     def __init__(self, dataset_names, dataset_configs, transform):
         super(CustomDataset, self).__init__()
 
-        self.dataset = []
+        list_dataset = []
 
-        for name in dataset_names:
+        for i, name in enumerate(dataset_names):
 
-            _dataset = ImageFolder(root=dataset_configs[name + '_path'], transform=transform)
+            # Target transform returns label of dataset id
+            dataset = ImageFolder(
+                root=dataset_configs[name + '_path'],
+                transform=transform,
+                target_transform=lambda x: i
+            )
 
-            _dataset_size = dataset_configs[name + "_size"]
-            assert type(_dataset_size) == int, "Dataset size should be int number!"
+            dataset_size = dataset_configs[name + "_size"]
+            assert type(dataset_size) == int, "Dataset size should be int number!"
 
-            if _dataset_size != -1:
-                _dataset, _ = random_split(_dataset, [_dataset_size, len(_dataset) - _dataset_size])
+            if dataset_size != -1:
+                dataset, _ = random_split(dataset, [dataset_size, len(dataset) - dataset_size])
 
-            self.dataset.append(_dataset)
+            list_dataset.append(dataset)
 
-        self.dataset = ConcatDataset(self.dataset)
+        self.dataset = ConcatDataset(list_dataset)
 
     def __getitem__(self, item):
-        image = self.dataset[item]
+        image, label = self.dataset[item]
 
-        return image
+        return image, label
 
     def __len__(self):
         return len(self.dataset)
@@ -61,11 +66,12 @@ class MergeDatasets(Dataset):
         assert len(self.first_dataset_cut) == len(self.second_dataset_cut), "Защита от дурачка, ы"
         print(f"Length of dataset: {min_length}")
 
+    # Returns content inage, style image, label of style image
     def __getitem__(self, index):
-        image1 = self.first_dataset_cut[index]
-        image2 = self.second_dataset_cut[index]
+        image1, _ = self.first_dataset_cut[index]
+        image2, label2 = self.second_dataset_cut[index]
 
-        return image1, image2
+        return image1, image2, label2
 
     def __len__(self):
         return len(self.first_dataset_cut)
