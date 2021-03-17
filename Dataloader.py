@@ -77,7 +77,7 @@ class MergeDatasets(Dataset):
         return len(self.first_dataset_cut)
 
 
-class CustomDataLoader(pl.LightningDataModule, ABC):
+class CustomDataLoader(pl.LightningDataModule):
     def __init__(self,
                  content_train_names: List[str],
                  style_train_names: List[str],
@@ -95,8 +95,8 @@ class CustomDataLoader(pl.LightningDataModule, ABC):
         self.content_train_names = content_train_names
         self.style_train_names = style_train_names
 
-        assert not content_train_names, "[] is passed as training content dataset"
-        assert not style_train_names, "[] is passed as training style dataset"
+        assert content_train_names != [], "[] is passed as training content dataset"
+        assert style_train_names != [], "[] is passed as training style dataset"
 
         self.train_dataset = None
         self.val_dataset = None

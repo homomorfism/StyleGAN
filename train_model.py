@@ -13,8 +13,8 @@ from models.StyleGAN import StyleGAN
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset_config', default='config/dataset.yaml')
-    parser.add_argument('--model_config', default='config/model.yaml')
+    parser.add_argument('--dataset_config', default='configs/dataset.yaml')
+    parser.add_argument('--model_config', default='configs/model.yaml')
     args = parser.parse_args()
 
     with open(args.model_config) as model_config, open(args.dataset_config) as dataset_config:
@@ -36,8 +36,8 @@ def main():
     )
 
     dataloader = CustomDataLoader(
-        content_train_names=['labeled_face_wild', 'celeba', 'caltech', 'oxford'],
-        style_train_names=['describable_textures'],
+        content_train_names=dataset_file['content_train_names'],
+        style_train_names=dataset_file['style_train_names'],
         dataset_config=dataset_config
     )
 

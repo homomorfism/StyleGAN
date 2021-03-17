@@ -52,16 +52,9 @@ class StyleGAN(pl.LightningModule):
         if optimizer_idx == 0 and self.train_step % self.log_image_interval == 0:
             _, _, stylized_image, _ = self.generator(content_image, style_image, style_classes)
 
-            grid_content_images = make_grid(content_image,
-                                            nrow=self.batch_size,
-                                            normalize=True)
-            grid_style_images = make_grid(style_image,
-                                          nrow=self.batch_size,
-                                          normalize=True)
-
-            grid_stylized_images = make_grid(stylized_image,
-                                             nrow=self.batch_size,
-                                             normalize=True)
+            grid_content_images = make_grid(content_image, nrow=self.batch_size, normalize=True)
+            grid_style_images = make_grid(style_image, nrow=self.batch_size, normalize=True)
+            grid_stylized_images = make_grid(stylized_image, nrow=self.batch_size, normalize=True)
 
             self.logger.experiment.add_image("Content images: Train stage", grid_content_images, self.train_step)
             self.logger.experiment.add_image("Style images: Train stage", grid_style_images, self.train_step)
@@ -139,6 +132,11 @@ class StyleGAN(pl.LightningModule):
         return d_adv + d_class
 
     def configure_optimizers(self):
+        """
+        Setting optimizers and schedulers for our model (Adam and StepLR). Change StepLR to
+
+        @return: tuple of optimizers and schedulers
+        """
         lr = self.model_configs['lr_start']
         betas = (self.model_configs['adam_b1'], self.model_configs['adam_b2'])
         step_size = self.model_configs['lr_step_size']
@@ -151,3 +149,6 @@ class StyleGAN(pl.LightningModule):
         discr_lr_sched = StepLR(discr_opt, step_size=step_size, gamma=0.5)
 
         return [gen_opt, discr_opt], [gen_lr_sched, discr_lr_sched]
+
+    def forward(self, x):
+        return self.generator(x)

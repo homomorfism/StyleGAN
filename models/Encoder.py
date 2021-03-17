@@ -6,14 +6,9 @@ from torchvision import models
 
 class Encoder(pl.LightningModule):
 
-    def __init__(self, verbose=False):
-        """
-
-        @param verbose: flag that prints only ones the shapes
-        """
+    def __init__(self):
         super(Encoder, self).__init__()
         model = models.vgg16(pretrained=True)
-        self.verbose = verbose
 
         features = list(model.features.children())[:31:]
         self.block1 = nn.Sequential(*features[:5:])
@@ -35,22 +30,16 @@ class Encoder(pl.LightningModule):
 
     def forward(self, x):
 
-        if self.verbose:
-            print(f"Encoder, init shape: {x.shape()}")
-
         x = self.block1(x)
-        to_concat1 = self.pooling1(x)
+        to_concat1, indexes1 = self.pooling1(x)
 
         x = self.block2(x)
-        to_concat2 = self.pooling2(x)
+        to_concat2, indexes2 = self.pooling2(x)
 
         x = self.block3(x)
-        to_concat3 = self.pooling3(x)
+        to_concat3, indexes3 = self.pooling3(x)
 
         x = self.block4(x)
 
         output = torch.cat((to_concat1, to_concat2, to_concat3, x), dim=2)
-        if self.verbose:
-            self.verbose = False
-
-        return output
+        return output, [indexes1, indexes2, indexes3]
