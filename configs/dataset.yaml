@@ -11,7 +11,7 @@ style_train_names: ['describable_textures', ]
 ## Content datasets
 
 # Faces: labeled face in wild, ~13000 images
-labeled_face_wild_archive: "data/lfw.zip"
+labeled_face_wild_archive: "data/lfw.tgz"
 labeled_face_wild_path: "data/content/lwf"
 labeled_face_wild_size: "all"
 

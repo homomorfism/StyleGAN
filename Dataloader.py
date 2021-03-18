@@ -1,6 +1,6 @@
 import os
+import tarfile
 import zipfile
-from abc import ABC
 from typing import List, Optional
 
 import pytorch_lightning as pl
@@ -32,9 +32,9 @@ class CustomDataset(Dataset):
             )
 
             dataset_size = dataset_configs[name + "_size"]
-            assert type(dataset_size) == int, "Dataset size should be int number!"
+            assert type(dataset_size) == int or dataset_size == "all", "Dataset size should be int number or all!"
 
-            if dataset_size != -1:
+            if dataset_size != -1 and dataset_size != "all":
                 dataset, _ = random_split(dataset, [dataset_size, len(dataset) - dataset_size])
 
             list_dataset.append(dataset)
@@ -106,11 +106,14 @@ class CustomDataLoader(pl.LightningDataModule):
         self.custom_transforms = transforms.Compose([
             transforms.ToPILImage(),
             transforms.Resize(self.dataset_config['image_size']),
-            transforms.ToPILImage(),
+            transforms.ToTensor(),
 
             # VGG works better using this coef.
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         ])
+
+        self.prepare_data()
+        self.setup()
 
     def prepare_data(self):
         """
@@ -118,6 +121,8 @@ class CustomDataLoader(pl.LightningDataModule):
 
         @return
         """
+
+        print("Prepare data ...")
 
         names = [self.content_train_names, self.style_train_names]
 
@@ -148,8 +153,14 @@ class CustomDataLoader(pl.LightningDataModule):
                         # Archive exists, unpacking data
 
                         print(f"Unzipping {dataset_archive} into {dataset_folder}...")
-                        with zipfile.ZipFile(dataset_archive, 'r') as zip_ref:
-                            zip_ref.extractall(dataset_folder)
+
+                        if 'zip' in dataset_archive:
+                            with zipfile.ZipFile(dataset_archive, 'r') as zip_ref:
+                                zip_ref.extractall(dataset_folder)
+
+                        else:
+                            with tarfile.open(dataset_archive, 'r') as tar_ref:
+                                tar_ref.extractall(dataset_folder)
 
                         print("Done!")
 
@@ -159,9 +170,11 @@ class CustomDataLoader(pl.LightningDataModule):
     def setup(self, stage: Optional[str] = None):
         """
         Here I merge different datasets into train and val dataset
-        :param stage: Dunno know what it is
-        :return:
+        @param stage: Dunno know what it is
+        @return:
         """
+
+        print("Setup data...")
         content_train_dataset = CustomDataset(
             dataset_names=self.content_train_names,
             transform=self.custom_transforms,

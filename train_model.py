@@ -38,7 +38,7 @@ def main():
     dataloader = CustomDataLoader(
         content_train_names=dataset_file['content_train_names'],
         style_train_names=dataset_file['style_train_names'],
-        dataset_config=dataset_config
+        dataset_config=dataset_file
     )
 
     train_loader = dataloader.train_dataloader()
