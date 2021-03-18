@@ -1,6 +1,6 @@
 import os
+import tarfile
 import zipfile
-from abc import ABC
 from typing import List, Optional
 
 import pytorch_lightning as pl
@@ -20,26 +20,31 @@ class CustomDataset(Dataset):
     def __init__(self, dataset_names, dataset_configs, transform):
         super(CustomDataset, self).__init__()
 
-        self.dataset = []
+        list_dataset = []
 
-        for name in dataset_names:
+        for i, name in enumerate(dataset_names):
 
-            _dataset = ImageFolder(root=dataset_configs[name + '_path'], transform=transform)
+            # Target transform returns label of dataset id
+            dataset = ImageFolder(
+                root=dataset_configs[name + '_path'],
+                transform=transform,
+                target_transform=lambda x: i
+            )
 
-            _dataset_size = dataset_configs[name + "_size"]
-            assert type(_dataset_size) == int, "Dataset size should be int number!"
+            dataset_size = dataset_configs[name + "_size"]
+            assert type(dataset_size) == int or dataset_size == "all", "Dataset size should be int number or all!"
 
-            if _dataset_size != -1:
-                _dataset, _ = random_split(_dataset, [_dataset_size, len(_dataset) - _dataset_size])
+            if dataset_size != -1 and dataset_size != "all":
+                dataset, _ = random_split(dataset, [dataset_size, len(dataset) - dataset_size])
 
-            self.dataset.append(_dataset)
+            list_dataset.append(dataset)
 
-        self.dataset = ConcatDataset(self.dataset)
+        self.dataset = ConcatDataset(list_dataset)
 
     def __getitem__(self, item):
-        image = self.dataset[item]
+        image, label = self.dataset[item]
 
-        return image
+        return image, label
 
     def __len__(self):
         return len(self.dataset)
@@ -61,17 +66,18 @@ class MergeDatasets(Dataset):
         assert len(self.first_dataset_cut) == len(self.second_dataset_cut), "Защита от дурачка, ы"
         print(f"Length of dataset: {min_length}")
 
+    # Returns content inage, style image, label of style image
     def __getitem__(self, index):
-        image1 = self.first_dataset_cut[index]
-        image2 = self.second_dataset_cut[index]
+        image1, _ = self.first_dataset_cut[index]
+        image2, label2 = self.second_dataset_cut[index]
 
-        return image1, image2
+        return image1, image2, label2
 
     def __len__(self):
         return len(self.first_dataset_cut)
 
 
-class CustomDataLoader(pl.LightningDataModule, ABC):
+class CustomDataLoader(pl.LightningDataModule):
     def __init__(self,
                  content_train_names: List[str],
                  style_train_names: List[str],
@@ -89,8 +95,8 @@ class CustomDataLoader(pl.LightningDataModule, ABC):
         self.content_train_names = content_train_names
         self.style_train_names = style_train_names
 
-        assert not content_train_names, "[] is passed as training content dataset"
-        assert not style_train_names, "[] is passed as training style dataset"
+        assert content_train_names != [], "[] is passed as training content dataset"
+        assert style_train_names != [], "[] is passed as training style dataset"
 
         self.train_dataset = None
         self.val_dataset = None
@@ -100,16 +106,23 @@ class CustomDataLoader(pl.LightningDataModule, ABC):
         self.custom_transforms = transforms.Compose([
             transforms.ToPILImage(),
             transforms.Resize(self.dataset_config['image_size']),
-            transforms.ToPILImage(),
+            transforms.ToTensor(),
 
             # VGG works better using this coef.
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         ])
 
+        self.prepare_data()
+        self.setup()
+
     def prepare_data(self):
         """
         Checking if data is unarchived or archives with images exists and need to be unarchived.
+
+        @return
         """
+
+        print("Prepare data ...")
 
         names = [self.content_train_names, self.style_train_names]
 
@@ -140,8 +153,14 @@ class CustomDataLoader(pl.LightningDataModule, ABC):
                         # Archive exists, unpacking data
 
                         print(f"Unzipping {dataset_archive} into {dataset_folder}...")
-                        with zipfile.ZipFile(dataset_archive, 'r') as zip_ref:
-                            zip_ref.extractall(dataset_folder)
+
+                        if 'zip' in dataset_archive:
+                            with zipfile.ZipFile(dataset_archive, 'r') as zip_ref:
+                                zip_ref.extractall(dataset_folder)
+
+                        else:
+                            with tarfile.open(dataset_archive, 'r') as tar_ref:
+                                tar_ref.extractall(dataset_folder)
 
                         print("Done!")
 
@@ -151,9 +170,11 @@ class CustomDataLoader(pl.LightningDataModule, ABC):
     def setup(self, stage: Optional[str] = None):
         """
         Here I merge different datasets into train and val dataset
-        :param stage: Dunno know what it is
-        :return:
+        @param stage: Dunno know what it is
+        @return:
         """
+
+        print("Setup data...")
         content_train_dataset = CustomDataset(
             dataset_names=self.content_train_names,
             transform=self.custom_transforms,

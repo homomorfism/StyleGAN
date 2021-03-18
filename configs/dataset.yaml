@@ -5,10 +5,13 @@
 # - content
 # - style
 
+content_train_names: ['labeled_face_wild', 'celeba', 'caltech', 'oxford', ]
+style_train_names: ['describable_textures', ]
+
 ## Content datasets
 
 # Faces: labeled face in wild, ~13000 images
-labeled_face_wild_archive: "data/lfw.zip"
+labeled_face_wild_archive: "data/lfw.tgz"
 labeled_face_wild_path: "data/content/lwf"
 labeled_face_wild_size: "all"
 
@@ -47,8 +50,12 @@ describable_textures_size: -1
 # To be added
 
 
+
 image_size: 256
 batch_size: 4
 val_percentage: 0.1
 num_workers: 16
+
+# Number of style classes
+n_style_classes: 1
 

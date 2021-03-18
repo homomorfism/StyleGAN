@@ -11,15 +11,14 @@ class Discriminator(pl.LightningModule):
     6-layer architecture, input is assumed to be (256, 256).
     """
 
-    def __init__(self, relu_negative_slope, style_classes, verbose=False):
+    def __init__(self, relu_negative_slope, style_classes):
         """
-        :param relu_negative_slope: relu slope, read from config
-        :param verbose: To see output of x.shape when forwarding input (only once)
+        @param relu_negative_slope: relu slope, read from config
+        @param style_classes: number of style classes to classify
         """
         super(Discriminator, self).__init__()
 
         neg_slope = relu_negative_slope
-        self.verbose = verbose
         self.style_classes = style_classes
 
         # Traditional 6-layer architecture
@@ -60,65 +59,54 @@ class Discriminator(pl.LightningModule):
 
         self.styles = nn.Sequential(
             nn.Linear(in_features=512, out_features=style_classes),
-            nn.Softmax()
+            nn.Softmax(dim=0)
         )
 
     def forward(self, x):
         """
-        Forward propagation with one-time displaying x shapes transformation (if verbose=True)
-        :param x: input tensor
-        :return: processes tensor
-        """
+        Forward propagation
 
-        if self.verbose:
-            print(f"x shape={x.shape}")
+        @param x: input tensor
+        @return: true/fake probability. probability of style class
+        """
 
         assert x.shape[1:] == torch.Size([3, 256, 256]), "Only pictures with shape [-1, 3, 256, 256] are supported"
 
         x = self.layer1(x)
-        if self.verbose:
-            print(f"Size of x={x.shape} should be [-1, 64, 128, 128]")
+        assert x.shape[1:] == torch.Size([64, 128, 128]), f"Size of x={x.shape} should be [-1, 64, 128, 128]"
 
         x = self.layer2(x)
-        if self.verbose:
-            print(f"Size of x={x.shape} should be [-1, 128, 64, 64]")
+        assert x.shape[1:] == torch.Size([128, 64, 64]), f"Size of x={x.shape} should be [-1, 128, 64, 64]"
 
         x = self.layer3(x)
-        if self.verbose:
-            print(f"Size of x={x.shape} should be [-1, 256, 32, 32]")
+        assert x.shape[1:] == torch.Size([256, 32, 32]), f"Size of x={x.shape} should be [-1, 256, 32, 32]"
 
         x = self.layer4(x)
-        if self.verbose:
-            print(f"Size of x={x.shape} should be [-1, 512, 16, 16]")
+        assert x.shape[1:] == torch.Size([512, 16, 16]), f"Size of x={x.shape} should be [-1, 512, 16, 16]"
 
         x = self.layer5(x)
-        if self.verbose:
-            print(f"Size of x={x.shape} should be [-1, 512, 16, 16]")
+        assert x.shape[1:] == torch.Size([512, 16, 16]), f"Size of x={x.shape} should be [-1, 512, 16, 16]"
 
         # Converting to [-1, 512] tensor
         x = nn.AvgPool2d(kernel_size=16)(x)
         flatten = nn.Flatten()(x)
-
         assert flatten.shape[1:] == torch.Size([512]), f"The shape of x: {flatten.shape}, but expected: [-1, 512]!"
 
         probabilities = self.probabilities(flatten)
-        if self.verbose:
-            print(f"Size of probabilities={probabilities.shape} should be [-1, 1]")
+        assert probabilities.shape[1:] == torch.Size(
+            [1]), f"Size of probabilities={probabilities.shape} should be [-1, 1]"
 
-        styles = self.style_classes(flatten)
-        if self.verbose:
-            print(f"Size of style classes={styles.shape} should be [-1, {self.style_classes}]")
+        styles = self.styles(flatten)
 
-        if self.verbose:
-            # Displaying additional info only once
-            self.verbose = False
+        assert styles.shape[1:] == torch.Size([self.style_classes]), \
+            f"Size of style probabilities={styles.shape} should be [-1, {self.style_classes}]"
 
         return probabilities, styles
 
     def display_gradients(self):
         """
         Displays gradients of each layer just to make sure that all gradients are non-Null, for debugging purposes.
-        :return: None
+        @return: None
         """
         print("printing gradients of each layer...")
 

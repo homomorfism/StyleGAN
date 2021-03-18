@@ -6,10 +6,9 @@ from models.utils import DecoderBlock
 
 class Decoder(pl.LightningModule):
 
-    def __init__(self, in_channels, middle_channels, out_channels, pooling_indices, verbose):
+    def __init__(self, in_channels, middle_channels, out_channels):
+        # TODO(Middle channels find info about them)
         super(Decoder, self).__init__()
-        self.pooling_indices = pooling_indices
-        self.verbose = verbose
 
         self.block1 = DecoderBlock(
             in_channels=in_channels,
@@ -53,31 +52,22 @@ class Decoder(pl.LightningModule):
             nn.ReLU(inplace=True),
         )
 
-    def forward(self, x):
+    def forward(self, x, pooling_indices):
+
+        # In encoder we stack indexes from the biggest image to small -> we need to invert list of indexes
+        pooling_indices = pooling_indices[::-1]
+
         x = self.block1(x)
-
-        if self.verbose:
-            print('Shape after block1: ', x.shape)
-
-        x = self.unpool1(x, self.pooling_indices[0])
+        x = self.unpool1(x, pooling_indices[0])
 
         x = self.block2(x)
-
-        if self.verbose:
-            print('Shape after block2: ', x.shape)
-        x = self.unpool2(x, self.pooling_indices[1])
+        x = self.unpool2(x, pooling_indices[1])
 
         x = self.block3(x)
-        if self.verbose:
-            print('Shape after block3: ', x.shape)
-        x = self.unpool3(x, self.pooling_indices[2])
+        x = self.unpool3(x, pooling_indices[2])
 
         x = self.block4(x)
-        if self.verbose:
-            print('Shape after block4: ', x.shape)
-            self.verbose = True
-
-        x = self.unpool4(x, self.pooling_indices[3])
+        x = self.unpool4(x, pooling_indices[3])
 
         output = self.block5(x)
 

@@ -3,3 +3,27 @@
 
 
 relu_negative_slope: 0.2
+
+
+lambda_adversarial: 1
+lambda_style_classification: 1
+lambda_content: 1
+lambda_style: 200
+
+adam_b1: 0.5
+adam_b2: 0.9
+
+lr_start: 2e-4
+lr_step_size: 60
+
+# Linear decrease lr, not exponentially
+
+# How fast to collect logs (number of iterations)
+log_image_interval: 100
+
+
+checkpoints_folder: "checkpoints/"
+tensorboard_log_dir: "logs/"
+
+# Batch increase in 4 times
+accumulate_grad_batches: 4
