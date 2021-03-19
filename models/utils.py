@@ -8,15 +8,29 @@ import torch.nn as nn
 
 class Mask(pl.LightningModule):
     """
-    Some comments of how it works...
+    Mask (to control the stylization level)
     """
-
-    def __init__(self):
+    def __init__(self, adain_output):
         super().__init__()
-        pass
+        self.M = torch.randn(adain_output.shape, requires_grad=True)
+        self.adain_output = adain_output
+        in_channels = adain_output.shape[0]
+        
+        self.block1 = nn.Sequential(
+          nn.Conv2d(in_channels, in_channels, kernel_size=(1, 1)),
+          nn.BatchNorm2d(in_channels),
+          nn.ReLU(inplace=True),
+          nn.Conv2d(in_channels, in_channels, kernel_size=(1, 1)),
+          nn.BatchNorm2d(in_channels),
+          nn.ReLU(inplace=True)
+        )
+		
 
     def forward(self, x):
-        pass
+        x = self.block1(x)
+        print(x.shape)
+        output = self.M * x + (1 - self.M) * self.adain_output
+        return output
 
 
 class AdaIN(pl.LightningModule):
